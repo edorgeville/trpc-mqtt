@@ -33,7 +33,7 @@ export const trpc = createTRPCProxyClient<AppRouter>({
   links: [
     mqttLink({
       url: "mqtt://localhost",
-      queue: "rpc/request"
+      requestTopic: "rpc/request"
     })
   ],
 });
@@ -48,7 +48,7 @@ import { appRouter } from './appRouter';
 
 createRMQHandler({ 
   url: "mqtt://localhost",
-  queue: "rpc/request",
+  requestTopic: "rpc/request",
   router: appRouter
 });
 ```
