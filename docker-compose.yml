@@ -1,0 +1,12 @@
+version: '2.1'
+services:
+  mqtt:
+    image: eclipse-mosquitto:2
+    ports:
+      - 1883:1883
+      - 9001:9001
+    volumes:
+      - ./config/:/mosquitto/config/:ro
+      - mqtt:/mosquitto/data
+volumes:
+  mqtt:
