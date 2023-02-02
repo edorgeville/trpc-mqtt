@@ -22,7 +22,7 @@ export const mqttLink = <TRouter extends AnyRouter>(
     const responseEmitter = new EventEmitter();
     responseEmitter.setMaxListeners(0);
 
-    const client = mqtt.connect(url);
+    const client = mqtt.connect(url, { protocolVersion: 5 });
     client.subscribe(RESPONSE_TOPIC);
     client.on('message', (topic, message, packet) => {
       const msg = message.toString();
@@ -35,12 +35,14 @@ export const mqttLink = <TRouter extends AnyRouter>(
       new Promise<any>(resolve => {
         const correlationId = randomUUID();
         responseEmitter.once(correlationId, resolve);
-        client.publish(requestTopic, JSON.stringify(message), {
+        const opts = {
           properties: {
             responseTopic: RESPONSE_TOPIC,
             correlationData: Buffer.from(correlationId)
           }
-        });
+        };
+        console.log(opts);
+        client.publish(requestTopic, JSON.stringify(message), opts);
       });
 
     return ({ op }) => {
