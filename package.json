@@ -45,7 +45,9 @@
     "zod": "^3.19.1"
   },
   "dependencies": {
+    "@types/mqtt": "^2.5.0",
     "amqp-connection-manager": "^4.1.7",
-    "amqplib": "^0.10.3"
+    "amqplib": "^0.10.3",
+    "mqtt": "^4.3.7"
   }
 }

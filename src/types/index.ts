@@ -5,16 +5,16 @@ import type {
   TRPCResultMessage
 } from '@trpc/server/rpc';
 
-export type TRPCRMQRequest = {
+export type TRPCMQTTRequest = {
   trpc: TRPCRequest | TRPCClientOutgoingMessage;
 };
 
-export type TRPCRMQSuccessResponse = {
+export type TRPCMQTTSuccessResponse = {
   trpc: TRPCResultMessage<any>;
 };
 
-export type TRPCRMQErrorResponse = {
+export type TRPCMQTTErrorResponse = {
   trpc: TRPCErrorResponse;
 };
 
-export type TRPCRMQResponse = TRPCRMQSuccessResponse | TRPCRMQErrorResponse;
+export type TRPCMQTTResponse = TRPCMQTTSuccessResponse | TRPCMQTTErrorResponse;

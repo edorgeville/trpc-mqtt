@@ -1,51 +1,45 @@
 import { TRPCClientError, TRPCLink } from '@trpc/client';
 import type { AnyRouter } from '@trpc/server';
 import { observable } from '@trpc/server/observable';
-import * as amqp from 'amqp-connection-manager';
 import { randomUUID } from 'crypto';
 import EventEmitter from 'events';
+import mqtt from 'mqtt';
 
-import type { TRPCRMQRequest, TRPCRMQResponse } from '../types';
+import type { TRPCMQTTRequest, TRPCMQTTResponse } from '../types';
 
-const REPLY_QUEUE = 'amq.rabbitmq.reply-to';
+const RESPONSE_TOPIC = 'rpc/response';
 
-export type TRPCRMQLinkOptions = {
+export type TRPCMQTTLinkOptions = {
   url: string;
-  queue: string;
-  durable?: boolean;
+  requestTopic: string;
 };
 
-export const rmqLink = <TRouter extends AnyRouter>(opts: TRPCRMQLinkOptions): TRPCLink<TRouter> => {
+export const mqttLink = <TRouter extends AnyRouter>(
+  opts: TRPCMQTTLinkOptions
+): TRPCLink<TRouter> => {
   return runtime => {
-    const { url, queue, durable } = opts;
+    const { url, requestTopic } = opts;
     const responseEmitter = new EventEmitter();
     responseEmitter.setMaxListeners(0);
 
-    const connection = amqp.connect(url);
-    const channel = connection.createChannel({
-      setup: async (channel: amqp.Channel) => {
-        await channel.assertQueue(queue, { durable });
-        await channel.consume(
-          REPLY_QUEUE,
-          msg => {
-            if (!msg) return;
-            responseEmitter.emit(
-              msg.properties.correlationId as string,
-              JSON.parse(msg.content.toString('utf-8'))
-            );
-          },
-          { noAck: true }
-        );
-      }
+    const client = mqtt.connect(url);
+    client.subscribe(RESPONSE_TOPIC);
+    client.on('message', (topic, message, packet) => {
+      const msg = message.toString();
+      const correlationData = packet.properties?.correlationData?.toString();
+      if (correlationData === undefined) return;
+      responseEmitter.emit(correlationData, JSON.parse(msg));
     });
 
-    const sendToQueue = async (message: TRPCRMQRequest) =>
+    const request = async (message: TRPCMQTTRequest) =>
       new Promise<any>(resolve => {
         const correlationId = randomUUID();
         responseEmitter.once(correlationId, resolve);
-        void channel.sendToQueue(queue, Buffer.from(JSON.stringify(message)), {
-          correlationId,
-          replyTo: REPLY_QUEUE
+        client.publish(requestTopic, JSON.stringify(message), {
+          properties: {
+            responseTopic: RESPONSE_TOPIC,
+            correlationData: Buffer.from(correlationId)
+          }
         });
       });
 
@@ -56,7 +50,7 @@ export const rmqLink = <TRouter extends AnyRouter>(opts: TRPCRMQLinkOptions): TR
         try {
           const input = runtime.transformer.serialize(op.input);
 
-          const onMessage = (message: TRPCRMQResponse) => {
+          const onMessage = (message: TRPCMQTTResponse) => {
             if (!('trpc' in message)) return;
             const { trpc } = message;
             if (!trpc) return;
@@ -82,7 +76,7 @@ export const rmqLink = <TRouter extends AnyRouter>(opts: TRPCRMQLinkOptions): TR
             observer.complete();
           };
 
-          sendToQueue({
+          request({
             trpc: {
               id,
               method: type,
@@ -101,8 +95,8 @@ export const rmqLink = <TRouter extends AnyRouter>(opts: TRPCRMQLinkOptions): TR
           );
         }
 
-        // eslint-disable-next-line @typescript-eslint/no-empty-function
-        return () => {};
+        // eslint-disable-next-line @typescript-eslint/no-empty-function, prettier/prettier
+        return () => { };
       });
     };
   };
