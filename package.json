@@ -1,17 +1,16 @@
 {
-  "name": "trpc-rabbitmq",
-  "version": "0.1.3",
-  "description": "tRPC adapter for RabbitMQ",
-  "author": "Piotr Adamczyk <xeno@xeno.yt>",
+  "name": "trpc-mqtt",
+  "version": "0.1.0",
+  "description": "tRPC adapter for MQTT",
+  "author": "Erwan d'Orgeville <info@erwandorgeville.com>",
   "license": "MIT",
   "keywords": [
     "trpc",
-    "rabbitmq",
-    "rmq"
+    "mqtt"
   ],
-  "homepage": "https://github.com/imxeno/trpc-rabbitmq",
-  "repository": "github:imxeno/trpc-rabbitmq",
-  "bugs": "https://github.com/imxeno/trpc-rabbitmq/issues",
+  "homepage": "https://github.com/edorgeville/trpc-mqtt",
+  "repository": "github:edorgeville/trpc-mqtt",
+  "bugs": "https://github.com/edorgeville/trpc-mqtt/issues",
   "scripts": {
     "prepublish": "npm run build",
     "test": "tsc --noEmit && jest --verbose --passWithNoTests",
