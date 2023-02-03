@@ -1,5 +1,5 @@
 <div align="center">
-  <img src="assets/trpc-rabbitmq-readme.png?v=2" alt="trpc-mqtt" />
+  <img src="assets/trpc-mqtt-readme.png" alt="trpc-mqtt" />
   <h1>trpc-mqtt</h1>
   <a href="https://www.npmjs.com/package/trpc-mqtt"><img src="https://img.shields.io/npm/v/trpc-mqtt.svg?style=flat&color=brightgreen" target="_blank" /></a>
   <a href="./LICENSE"><img src="https://img.shields.io/badge/license-MIT-black" /></a>
