@@ -41,7 +41,6 @@ export const mqttLink = <TRouter extends AnyRouter>(
             correlationData: Buffer.from(correlationId)
           }
         };
-        console.log(opts);
         client.publish(requestTopic, JSON.stringify(message), opts);
       });
 

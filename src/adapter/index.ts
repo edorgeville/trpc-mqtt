@@ -36,10 +36,8 @@ export const createMQTTHandler = <TRouter extends AnyRouter>(
     const msg = message.toString();
     console.log(topic, msg);
     if (!msg) return;
-    // channel.ack(msg);
     const correlationId = packet.properties?.correlationData?.toString();
     const responseTopic = packet.properties?.responseTopic?.toString();
-    console.log(correlationId, responseTopic);
     if (!correlationId || !responseTopic) return;
     const res = await handleMessage(router, msg, onError);
     if (!res) return;
