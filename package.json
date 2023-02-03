@@ -17,8 +17,8 @@
     "build": "rimraf dist && rimraf adapter && rimraf link && rimraf types && tsc -p tsconfig.build.json && shx mv dist/* . && rimraf dist"
   },
   "peerDependencies": {
-    "@trpc/client": "10.0.0-proxy-beta.18",
-    "@trpc/server": "10.0.0-proxy-beta.18"
+    "@trpc/client": "10.9.1",
+    "@trpc/server": "10.9.1"
   },
   "devDependencies": {
     "@trivago/prettier-plugin-sort-imports": "^3.3.0",
@@ -45,8 +45,6 @@
   },
   "dependencies": {
     "@types/mqtt": "^2.5.0",
-    "amqp-connection-manager": "^4.1.7",
-    "amqplib": "^0.10.3",
     "mqtt": "^4.3.7"
   }
 }
