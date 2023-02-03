@@ -39,14 +39,14 @@ export const trpc = createTRPCProxyClient<AppRouter>({
 });
 ```
 
-**3. Use `createRMQHandler` to handle incoming calls via mqtt on the server.**
+**3. Use `createMQTTHandler` to handle incoming calls via mqtt on the server.**
 
 ```typescript
-import { createRMQHandler } from 'trpc-mqtt/adapter';
+import { createMQTTHandler } from 'trpc-mqtt/adapter';
 
 import { appRouter } from './appRouter';
 
-createRMQHandler({ 
+createMQTTHandler({ 
   url: "mqtt://localhost",
   requestTopic: "rpc/request",
   router: appRouter
