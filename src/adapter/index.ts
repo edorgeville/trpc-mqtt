@@ -6,7 +6,7 @@ import {
   inferRouterContext
 } from '@trpc/server';
 import type { OnErrorFunction } from '@trpc/server/dist/internals/types';
-import mqtt from 'mqtt';
+import mqtt, { MqttClient } from 'mqtt';
 
 import { getErrorFromUnknown } from './errors';
 
@@ -22,15 +22,16 @@ export type CreateMQTTHandlerOptions<TRouter extends AnyRouter> = {
   url: string;
   requestTopic: string;
   router: TRouter;
+  mqttOptions?: MqttClient['options'];
   onError?: OnErrorFunction<TRouter, ConsumeMessage>;
 };
 
 export const createMQTTHandler = <TRouter extends AnyRouter>(
   opts: CreateMQTTHandlerOptions<TRouter>
 ) => {
-  const { url, requestTopic: requestTopic, router, onError } = opts;
+  const { url, requestTopic: requestTopic, router, onError, mqttOptions } = opts;
 
-  const client = mqtt.connect(url, { protocolVersion: 5 });
+  const client = mqtt.connect(url, { ...mqttOptions, protocolVersion: 5 });
   client.subscribe(requestTopic);
   client.on('message', async (topic, message, packet) => {
     const msg = message.toString();

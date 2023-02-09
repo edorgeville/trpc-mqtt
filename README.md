@@ -39,6 +39,8 @@ export const trpc = createTRPCProxyClient<AppRouter>({
 });
 ```
 
+Note: `mqttOptions` can be specified to configure the underlying MQTT connection. See [MQTT.js docs](https://github.com/mqttjs/MQTT.js#mqttclientstreambuilder-options) for more information.
+
 **3. Use `createMQTTHandler` to handle incoming calls via mqtt on the server.**
 
 ```typescript
@@ -52,6 +54,8 @@ createMQTTHandler({
   router: appRouter
 });
 ```
+
+Note: same as in the client, `mqttServerOptions` can be specified to configure the underlying MQTT connection.
 
 ## License
 

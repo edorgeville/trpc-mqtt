@@ -3,7 +3,7 @@ import type { AnyRouter } from '@trpc/server';
 import { observable } from '@trpc/server/observable';
 import { randomUUID } from 'crypto';
 import EventEmitter from 'events';
-import mqtt from 'mqtt';
+import mqtt, { MqttClient } from 'mqtt';
 
 import type { TRPCMQTTRequest, TRPCMQTTResponse } from '../types';
 
@@ -12,17 +12,18 @@ const RESPONSE_TOPIC = 'rpc/response';
 export type TRPCMQTTLinkOptions = {
   url: string;
   requestTopic: string;
+  mqttOptions?: MqttClient['options'];
 };
 
 export const mqttLink = <TRouter extends AnyRouter>(
   opts: TRPCMQTTLinkOptions
 ): TRPCLink<TRouter> => {
   return runtime => {
-    const { url, requestTopic } = opts;
+    const { url, requestTopic, mqttOptions } = opts;
     const responseEmitter = new EventEmitter();
     responseEmitter.setMaxListeners(0);
 
-    const client = mqtt.connect(url, { protocolVersion: 5 });
+    const client = mqtt.connect(url, { ...mqttOptions, protocolVersion: 5 });
     client.subscribe(RESPONSE_TOPIC);
     client.on('message', (topic, message, packet) => {
       const msg = message.toString();
