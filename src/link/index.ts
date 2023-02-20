@@ -7,11 +7,10 @@ import mqtt, { MqttClient } from 'mqtt';
 
 import type { TRPCMQTTRequest, TRPCMQTTResponse } from '../types';
 
-const RESPONSE_TOPIC = 'rpc/response';
-
 export type TRPCMQTTLinkOptions = {
   url: string;
   requestTopic: string;
+  responseTopic?: string;
   mqttOptions?: MqttClient['options'];
 };
 
@@ -19,12 +18,12 @@ export const mqttLink = <TRouter extends AnyRouter>(
   opts: TRPCMQTTLinkOptions
 ): TRPCLink<TRouter> => {
   return runtime => {
-    const { url, requestTopic, mqttOptions } = opts;
+    const { url, requestTopic, mqttOptions, responseTopic = `${requestTopic}/response` } = opts;
     const responseEmitter = new EventEmitter();
     responseEmitter.setMaxListeners(0);
 
     const client = mqtt.connect(url, { ...mqttOptions, protocolVersion: 5 });
-    client.subscribe(RESPONSE_TOPIC);
+    client.subscribe(responseTopic);
     client.on('message', (topic, message, packet) => {
       const msg = message.toString();
       const correlationData = packet.properties?.correlationData?.toString();
@@ -38,7 +37,7 @@ export const mqttLink = <TRouter extends AnyRouter>(
         responseEmitter.once(correlationId, resolve);
         const opts = {
           properties: {
-            responseTopic: RESPONSE_TOPIC,
+            responseTopic,
             correlationData: Buffer.from(correlationId)
           }
         };
