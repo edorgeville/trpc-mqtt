@@ -24,18 +24,19 @@ export type CreateMQTTHandlerOptions<TRouter extends AnyRouter> = {
   router: TRouter;
   mqttOptions?: MqttClient['options'];
   onError?: OnErrorFunction<TRouter, ConsumeMessage>;
+  verbose?: boolean;
 };
 
 export const createMQTTHandler = <TRouter extends AnyRouter>(
   opts: CreateMQTTHandlerOptions<TRouter>
 ) => {
-  const { url, requestTopic: requestTopic, router, onError, mqttOptions } = opts;
+  const { url, requestTopic: requestTopic, router, onError, mqttOptions, verbose } = opts;
 
   const client = mqtt.connect(url, { ...mqttOptions, protocolVersion: 5 });
   client.subscribe(requestTopic);
   client.on('message', async (topic, message, packet) => {
     const msg = message.toString();
-    console.log(topic, msg);
+    if (verbose) console.log(topic, msg);
     if (!msg) return;
     const correlationId = packet.properties?.correlationData?.toString();
     const responseTopic = packet.properties?.responseTopic?.toString();
