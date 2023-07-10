@@ -12,13 +12,20 @@ export type TRPCMQTTLinkOptions = {
   requestTopic: string;
   responseTopic?: string;
   mqttOptions?: MqttClient['options'];
+  requestTimeoutMs?: number;
 };
 
 export const mqttLink = <TRouter extends AnyRouter>(
   opts: TRPCMQTTLinkOptions
 ): TRPCLink<TRouter> => {
   return runtime => {
-    const { url, requestTopic, mqttOptions, responseTopic = `${requestTopic}/response` } = opts;
+    const {
+      url,
+      requestTopic,
+      mqttOptions,
+      responseTopic = `${requestTopic}/response`,
+      requestTimeoutMs = 5000
+    } = opts;
     const responseEmitter = new EventEmitter();
     responseEmitter.setMaxListeners(0);
 
@@ -35,9 +42,18 @@ export const mqttLink = <TRouter extends AnyRouter>(
     });
 
     const request = async (message: TRPCMQTTRequest) =>
-      new Promise<any>(resolve => {
+      new Promise<any>((resolve, reject) => {
         const correlationId = randomUUID();
-        responseEmitter.once(correlationId, resolve);
+        const onTimeout = () => {
+          responseEmitter.off(correlationId, onMessage);
+          reject(new TRPCClientError('Request timed out after ' + requestTimeoutMs + 'ms'));
+        };
+        const timeout = setTimeout(onTimeout, requestTimeoutMs);
+        const onMessage = (message: TRPCMQTTResponse) => {
+          clearTimeout(timeout);
+          resolve(message);
+        };
+        responseEmitter.once(correlationId, onMessage);
         const opts = {
           properties: {
             responseTopic,
