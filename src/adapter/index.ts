@@ -33,6 +33,9 @@ export const createMQTTHandler = <TRouter extends AnyRouter>(
   const { url, requestTopic: requestTopic, router, onError, mqttOptions, verbose } = opts;
 
   const client = mqtt.connect(url, { ...mqttOptions, protocolVersion: 5 });
+  client.on('error', err => {
+    throw err;
+  });
   client.subscribe(requestTopic);
   client.on('message', async (topic, message, packet) => {
     const msg = message.toString();

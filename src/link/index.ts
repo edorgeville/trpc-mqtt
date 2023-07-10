@@ -24,6 +24,9 @@ export const mqttLink = <TRouter extends AnyRouter>(
 
     const client = mqtt.connect(url, { ...mqttOptions, protocolVersion: 5 });
     client.subscribe(responseTopic);
+    client.on('error', err => {
+      throw err;
+    });
     client.on('message', (topic, message, packet) => {
       const msg = message.toString();
       const correlationData = packet.properties?.correlationData?.toString();
