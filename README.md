@@ -62,4 +62,4 @@ Note: same as in the client, `mqttServerOptions` can be specified to configure t
 Distributed under the MIT License. See LICENSE for more information.
 
 ## Special thanks
-This project is a fork of [trpc-rabbitmq](https://github.com/alexbrazier/trpc-rabbitmq) by [Alex Brazier](https://github.com/imxeno)
+This project is a fork of [trpc-rabbitmq](https://github.com/imnexo/trpc-rabbitmq) by [Alex Brazier](https://github.com/imxeno)
