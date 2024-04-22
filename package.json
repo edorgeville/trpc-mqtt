@@ -1,6 +1,6 @@
 {
   "name": "trpc-mqtt",
-  "version": "0.1.6",
+  "version": "0.1.7",
   "description": "tRPC adapter for MQTT",
   "author": "Erwan d'Orgeville <info@erwandorgeville.com>",
   "license": "MIT",
