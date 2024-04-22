@@ -32,7 +32,8 @@ export const createMQTTHandler = <TRouter extends AnyRouter>(
 ) => {
   const { url, requestTopic: requestTopic, router, onError, mqttOptions, verbose } = opts;
 
-  const client = mqtt.connect(url, { ...mqttOptions, protocolVersion: 5 });
+  const client = mqtt.connect(url, mqttOptions);
+  const protocolVersion = client.options.protocolVersion ?? 4;
   client.on('error', err => {
     throw err;
   });
@@ -41,16 +42,34 @@ export const createMQTTHandler = <TRouter extends AnyRouter>(
     const msg = message.toString();
     if (verbose) console.log(topic, msg);
     if (!msg) return;
-    const correlationId = packet.properties?.correlationData?.toString();
-    const responseTopic = packet.properties?.responseTopic?.toString();
-    if (!correlationId || !responseTopic) return;
-    const res = await handleMessage(router, msg, onError);
-    if (!res) return;
-    client.publish(responseTopic, Buffer.from(JSON.stringify({ trpc: res })), {
-      properties: {
-        correlationData: Buffer.from(correlationId)
+    if (protocolVersion >= 5) {
+      // MQTT 5.0+, use the correlationData & responseTopic field
+      const correlationId = packet.properties?.correlationData?.toString();
+      const responseTopic = packet.properties?.responseTopic?.toString();
+      if (!correlationId || !responseTopic) return;
+      const res = await handleMessage(router, msg, onError);
+      if (!res) return;
+      client.publish(responseTopic, Buffer.from(JSON.stringify({ trpc: res })), {
+        properties: {
+          correlationData: Buffer.from(correlationId)
+        }
+      });
+    } else {
+      // MQTT < 5.0, use the message itself
+      let correlationId: string | undefined;
+      let responseTopic: string | undefined;
+      try {
+        const parsed = JSON.parse(msg);
+        correlationId = parsed.correlationId;
+        responseTopic = parsed.responseTopic;
+      } catch (err) {
+        return;
       }
-    });
+      if (!correlationId || !responseTopic) return;
+      const res = await handleMessage(router, msg, onError);
+      if (!res) return;
+      client.publish(responseTopic, Buffer.from(JSON.stringify({ trpc: res, correlationId })));
+    }
   });
   return { close: () => client.end() };
 };

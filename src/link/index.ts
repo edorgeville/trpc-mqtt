@@ -29,16 +29,30 @@ export const mqttLink = <TRouter extends AnyRouter>(
     const responseEmitter = new EventEmitter();
     responseEmitter.setMaxListeners(0);
 
-    const client = mqtt.connect(url, { ...mqttOptions, protocolVersion: 5 });
+    const client = mqtt.connect(url, mqttOptions);
+    const protocolVersion = client.options.protocolVersion ?? 4;
+
     client.subscribe(responseTopic);
     client.on('error', err => {
       throw err;
     });
     client.on('message', (topic, message, packet) => {
       const msg = message.toString();
-      const correlationData = packet.properties?.correlationData?.toString();
-      if (correlationData === undefined) return;
-      responseEmitter.emit(correlationData, JSON.parse(msg));
+      if (protocolVersion >= 5) {
+        const correlationData = packet.properties?.correlationData?.toString();
+        if (correlationData === undefined) return;
+        responseEmitter.emit(correlationData, JSON.parse(msg));
+      } else {
+        let correlationId: string | undefined;
+        try {
+          const parsed = JSON.parse(msg);
+          correlationId = parsed.correlationId;
+        } catch (err) {
+          return;
+        }
+        if (correlationId === undefined) return;
+        responseEmitter.emit(correlationId, JSON.parse(msg));
+      }
     });
 
     const request = async (message: TRPCMQTTRequest) =>
@@ -54,13 +68,22 @@ export const mqttLink = <TRouter extends AnyRouter>(
           resolve(message);
         };
         responseEmitter.once(correlationId, onMessage);
-        const opts = {
-          properties: {
-            responseTopic,
-            correlationData: Buffer.from(correlationId)
-          }
-        };
-        client.publish(requestTopic, JSON.stringify(message), opts);
+        if (protocolVersion >= 5) {
+          // MQTT 5.0+, use the correlationData & responseTopic field
+          const opts = {
+            properties: {
+              responseTopic,
+              correlationData: Buffer.from(correlationId)
+            }
+          };
+          client.publish(requestTopic, JSON.stringify(message), opts);
+        } else {
+          // MQTT < 5.0, use the message itself
+          client.publish(
+            requestTopic,
+            JSON.stringify({ ...message, correlationId, responseTopic })
+          );
+        }
       });
 
     return ({ op }) => {
