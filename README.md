@@ -14,11 +14,11 @@
 
 ```bash
 # npm
-npm install trpc-mqtt
+npm install trpc-mqtt mqtt
 # yarn
-yarn add trpc-mqtt
+yarn add trpc-mqtt mqtt
 # pnpm
-pnpm add trpc-mqtt
+pnpm add trpc-mqtt mqtt
 ```
 
 **2. Use `mqttLink` in your client code.**
