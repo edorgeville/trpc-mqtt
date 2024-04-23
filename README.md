@@ -26,20 +26,23 @@ pnpm add trpc-mqtt
 ```typescript
 import { createTRPCProxyClient } from '@trpc/client';
 import { mqttLink } from 'trpc-mqtt/link';
+import mqtt from 'mqtt';
 
 import type { AppRouter } from './appRouter';
+
+const client = mqtt.connect('mqtt://localhost');
 
 export const trpc = createTRPCProxyClient<AppRouter>({
   links: [
     mqttLink({
-      url: "mqtt://localhost",
+      client,
       requestTopic: "rpc/request"
     })
   ],
 });
 ```
 
-Note: `mqttOptions` can be specified to configure the underlying MQTT connection. See [MQTT.js docs](https://github.com/mqttjs/MQTT.js#mqttclientstreambuilder-options) for more information.
+Note: don't forget to clean up the MQTT client when you're done, using `client.end()`.
 
 **3. Use `createMQTTHandler` to handle incoming calls via mqtt on the server.**
 
@@ -48,14 +51,16 @@ import { createMQTTHandler } from 'trpc-mqtt/adapter';
 
 import { appRouter } from './appRouter';
 
+const client = mqtt.connect('mqtt://localhost');
+
 createMQTTHandler({ 
-  url: "mqtt://localhost",
+  client,
   requestTopic: "rpc/request",
   router: appRouter
 });
 ```
 
-Note: same as in the client, `mqttServerOptions` can be specified to configure the underlying MQTT connection.
+Note: same as with the link, don't forget to clean up the MQTT client when you're done, using `client.end()`.
 
 ## License
 

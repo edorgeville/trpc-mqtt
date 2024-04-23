@@ -6,7 +6,7 @@ import {
   inferRouterContext
 } from '@trpc/server';
 import type { OnErrorFunction } from '@trpc/server/dist/internals/types';
-import mqtt, { MqttClient } from 'mqtt';
+import type { MqttClient } from 'mqtt';
 
 import { getErrorFromUnknown } from './errors';
 
@@ -19,10 +19,9 @@ const MQTT_METHOD_PROCEDURE_TYPE_MAP: Record<string, ProcedureType | undefined> 
 };
 
 export type CreateMQTTHandlerOptions<TRouter extends AnyRouter> = {
-  url: string;
+  client: MqttClient;
   requestTopic: string;
   router: TRouter;
-  mqttOptions?: MqttClient['options'];
   onError?: OnErrorFunction<TRouter, ConsumeMessage>;
   verbose?: boolean;
 };
@@ -30,9 +29,8 @@ export type CreateMQTTHandlerOptions<TRouter extends AnyRouter> = {
 export const createMQTTHandler = <TRouter extends AnyRouter>(
   opts: CreateMQTTHandlerOptions<TRouter>
 ) => {
-  const { url, requestTopic: requestTopic, router, onError, mqttOptions, verbose } = opts;
+  const { client, requestTopic: requestTopic, router, onError, verbose } = opts;
 
-  const client = mqtt.connect(url, mqttOptions);
   const protocolVersion = client.options.protocolVersion ?? 4;
   client.on('error', err => {
     throw err;
@@ -71,7 +69,6 @@ export const createMQTTHandler = <TRouter extends AnyRouter>(
       client.publish(responseTopic, Buffer.from(JSON.stringify({ trpc: res, correlationId })));
     }
   });
-  return { close: () => client.end() };
 };
 
 async function handleMessage<TRouter extends AnyRouter>(
