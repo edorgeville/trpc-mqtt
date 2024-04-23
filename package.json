@@ -19,7 +19,7 @@
   "peerDependencies": {
     "@trpc/client": "^10.9.1",
     "@trpc/server": "^10.9.1",
-    "mqtt": "^4.3.7"
+    "mqtt": "^5.5.3"
   },
   "devDependencies": {
     "@trivago/prettier-plugin-sort-imports": "^3.3.0",
