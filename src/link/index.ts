@@ -30,9 +30,6 @@ export const mqttLink = <TRouter extends AnyRouter>(
     const protocolVersion = client.options.protocolVersion ?? 4;
 
     client.subscribe(responseTopic);
-    client.on('error', err => {
-      throw err;
-    });
     client.on('message', (topic, message, packet) => {
       const msg = message.toString();
       if (protocolVersion >= 5) {
