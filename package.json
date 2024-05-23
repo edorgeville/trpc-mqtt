@@ -13,7 +13,7 @@
   "bugs": "https://github.com/edorgeville/trpc-mqtt/issues",
   "scripts": {
     "prepublish": "npm run build",
-    "test": "tsc --noEmit && jest --verbose --passWithNoTests",
+    "test": "tsc --noEmit && jest",
     "build": "rimraf dist && rimraf adapter && rimraf link && rimraf types && tsc -p tsconfig.build.json && shx mv dist/* . && rimraf dist"
   },
   "peerDependencies": {
@@ -27,6 +27,7 @@
     "@types/node": "^18.8.5",
     "@typescript-eslint/eslint-plugin": "^5.40.0",
     "@typescript-eslint/parser": "^5.40.0",
+    "aedes": "^0.51.1",
     "eslint": "^8.25.0",
     "eslint-config-prettier": "^8.5.0",
     "eslint-plugin-import": "^2.26.0",
