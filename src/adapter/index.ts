@@ -34,6 +34,7 @@ export const createMQTTHandler = <TRouter extends AnyRouter>(
   const protocolVersion = client.options.protocolVersion ?? 4;
   client.subscribe(requestTopic);
   client.on('message', async (topic, message, packet) => {
+    if (requestTopic !== topic) return; // Ignore messages not on the response topic, from other users of the shared client
     const msg = message.toString();
     if (verbose) console.log(topic, msg);
     if (!msg) return;

@@ -31,6 +31,7 @@ export const mqttLink = <TRouter extends AnyRouter>(
 
     client.subscribe(responseTopic);
     client.on('message', (topic, message, packet) => {
+      if (responseTopic !== topic) return; // Ignore messages not on the response topic, from other users of the shared client
       const msg = message.toString();
       if (protocolVersion >= 5) {
         const correlationData = packet.properties?.correlationData?.toString();
