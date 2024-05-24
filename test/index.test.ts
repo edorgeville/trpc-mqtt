@@ -1,74 +1,59 @@
-import { createTRPCProxyClient } from '@trpc/client';
-import Aedes from 'aedes';
-import { once } from 'events';
-import mqtt from 'mqtt';
-import { createServer } from 'net';
+import { withFactory } from './factory';
 
-import { createMQTTHandler } from '../src/adapter';
-import { mqttLink } from '../src/link';
-import { AppRouter, appRouter } from './appRouter';
-
-const requestTopic = 'rpc/request';
-
-const aedes = new Aedes();
-// aedes.on('publish', (packet, client) => console.log(packet.topic, packet.payload.toString()));
-const broker = createServer(aedes.handle);
-broker.listen(1883);
-const mqttClient = mqtt.connect('mqtt://localhost');
-
-createMQTTHandler({
-  client: mqttClient,
-  requestTopic,
-  router: appRouter
+describe('broker', () => {
+  test('is listening', async () => {
+    await withFactory(async ({ broker }) => {
+      expect(broker.listening).toBe(true);
+    });
+  });
 });
 
-const client = createTRPCProxyClient<AppRouter>({
-  links: [
-    mqttLink({
-      client: mqttClient,
-      requestTopic
-    })
-  ]
+describe('mqtt client', () => {
+  test('is connected', async () => {
+    await withFactory(async ({ mqttClient }) => {
+      expect(mqttClient.connected).toBe(true);
+    });
+  });
 });
 
-beforeAll(async () => {
-  await once(broker, 'listening');
-  await once(mqttClient, 'connect');
-});
-
-test('broker is listening', () => {
-  expect(broker.listening).toBe(true);
-});
-
-test('mqtt client is connected', () => {
-  expect(mqttClient.connected).toBe(true);
-});
-
-test('greet query', async () => {
-  const greeting = await client.greet.query('world');
-  expect(greeting).toEqual({ greeting: 'hello, world!' });
-});
-
-test('countUp mutation', async () => {
-  const addOne = await client.countUp.mutate(1);
-  expect(addOne).toBe(1);
-
-  const addTwo = await client.countUp.mutate(2);
-  expect(addTwo).toBe(3);
-});
-
-test('abortSignal is handled', async () => {
-  const controller = new AbortController();
-  const promise = client.slow.query(undefined, {
-    signal: controller.signal
+describe('procedures', () => {
+  test('greet query', async () => {
+    await withFactory(async ({ client }) => {
+      const greeting = await client.greet.query('world');
+      expect(greeting).toEqual({ greeting: 'hello, world!' });
+    });
   });
 
-  controller.abort();
-  await expect(promise).rejects.toThrow('aborted');
+  test('countUp mutation', async () => {
+    await withFactory(async ({ client }) => {
+      const addOne = await client.countUp.mutate(1);
+      expect(addOne).toBe(1);
+
+      const addTwo = await client.countUp.mutate(2);
+      expect(addTwo).toBe(3);
+    });
+  });
+
+  describe('abort signal', () => {
+    test('is handled', async () => {
+      await withFactory(async ({ client }) => {
+        const controller = new AbortController();
+        const promise = client.slow.query(undefined, {
+          signal: controller.signal
+        });
+
+        controller.abort();
+        await expect(promise).rejects.toThrow('aborted');
+      });
+    });
+  });
 });
 
-afterAll(async () => {
-  mqttClient.end();
-  broker.close();
-  aedes.close();
+describe('context', () => {
+  test('getContext query', async () => {
+    await withFactory(async ({ client }) => {
+      const ctx = await client.getContext.query();
+      expect(ctx).toEqual({ hello: 'world' });
+    });
+  });
 });

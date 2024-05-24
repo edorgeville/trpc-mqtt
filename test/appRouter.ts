@@ -2,7 +2,13 @@ import { initTRPC } from '@trpc/server';
 
 export type AppRouter = typeof appRouter;
 
-const t = initTRPC.create();
+export async function createContext() {
+  return { hello: 'world' };
+}
+
+export type Context = Awaited<ReturnType<typeof createContext>>;
+
+const t = initTRPC.context<Context>().create();
 
 const publicProcedure = t.procedure;
 const router = t.router;
@@ -28,5 +34,8 @@ export const appRouter = router({
   slow: publicProcedure.query(async () => {
     await new Promise(resolve => setTimeout(resolve, 10 * 1000));
     return 'done';
+  }),
+  getContext: publicProcedure.query(({ ctx }) => {
+    return ctx;
   })
 });
