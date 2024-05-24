@@ -97,7 +97,6 @@ export const mqttLink = <TRouter extends AnyRouter>(
               };
               const onAbort = () => {
                 // This runs when the request is aborted externally
-                console.log('Aborting request', path);
                 clearTimeout(timeout);
                 responseEmitter.off(correlationId, onMessage);
                 reject(new TRPCClientError('Request aborted'));
