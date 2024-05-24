@@ -24,5 +24,9 @@ export const appRouter = router({
     .mutation(({ input }) => {
       state.count += input;
       return state.count;
-    })
+    }),
+  slow: publicProcedure.query(async () => {
+    await new Promise(resolve => setTimeout(resolve, 10 * 1000));
+    return 'done';
+  })
 });

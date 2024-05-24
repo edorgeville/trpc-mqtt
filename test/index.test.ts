@@ -57,6 +57,16 @@ test('countUp mutation', async () => {
   expect(addTwo).toBe(3);
 });
 
+test('abortSignal is handled', async () => {
+  const controller = new AbortController();
+  const promise = client.slow.query(undefined, {
+    signal: controller.signal
+  });
+
+  controller.abort();
+  await expect(promise).rejects.toThrow('aborted');
+});
+
 afterAll(async () => {
   mqttClient.end();
   broker.close();
