@@ -1,52 +1,50 @@
-import { factory } from './factory';
+import { withFactory } from './factory';
 
-test('broker is listening', async () => {
-  const { broker, close } = await factory();
-
-  expect(broker.listening).toBe(true);
-
-  close();
+describe('broker', () => {
+  test('is listening', async () => {
+    await withFactory(async ({ broker }) => {
+      expect(broker.listening).toBe(true);
+    });
+  });
 });
 
-test('mqtt client is connected', async () => {
-  const { mqttClient, close } = await factory();
-
-  expect(mqttClient.connected).toBe(true);
-
-  close();
+describe('mqtt client', () => {
+  test('is connected', async () => {
+    await withFactory(async ({ mqttClient }) => {
+      expect(mqttClient.connected).toBe(true);
+    });
+  });
 });
 
-test('greet query', async () => {
-  const { client, close } = await factory();
-
-  const greeting = await client.greet.query('world');
-  expect(greeting).toEqual({ greeting: 'hello, world!' });
-
-  close();
-});
-
-test('countUp mutation', async () => {
-  const { client, close } = await factory();
-
-  const addOne = await client.countUp.mutate(1);
-  expect(addOne).toBe(1);
-
-  const addTwo = await client.countUp.mutate(2);
-  expect(addTwo).toBe(3);
-
-  close();
-});
-
-test('abortSignal is handled', async () => {
-  const { client, close } = await factory();
-
-  const controller = new AbortController();
-  const promise = client.slow.query(undefined, {
-    signal: controller.signal
+describe('procedures', () => {
+  test('greet query', async () => {
+    await withFactory(async ({ client }) => {
+      const greeting = await client.greet.query('world');
+      expect(greeting).toEqual({ greeting: 'hello, world!' });
+    });
   });
 
-  controller.abort();
-  await expect(promise).rejects.toThrow('aborted');
+  test('countUp mutation', async () => {
+    await withFactory(async ({ client }) => {
+      const addOne = await client.countUp.mutate(1);
+      expect(addOne).toBe(1);
 
-  close();
+      const addTwo = await client.countUp.mutate(2);
+      expect(addTwo).toBe(3);
+    });
+  });
+
+  describe('abort signal', () => {
+    test('is handled', async () => {
+      await withFactory(async ({ client }) => {
+        const controller = new AbortController();
+        const promise = client.slow.query(undefined, {
+          signal: controller.signal
+        });
+
+        controller.abort();
+        await expect(promise).rejects.toThrow('aborted');
+      });
+    });
+  });
 });

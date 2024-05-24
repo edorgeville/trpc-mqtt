@@ -8,7 +8,7 @@ import { createMQTTHandler } from '../src/adapter';
 import { mqttLink } from '../src/link';
 import { AppRouter, appRouter } from './appRouter';
 
-export async function factory() {
+export function factory() {
   const requestTopic = 'rpc/request';
 
   const aedes = new Aedes();
@@ -32,17 +32,28 @@ export async function factory() {
     ]
   });
 
-  await once(broker, 'listening');
-  await once(mqttClient, 'connect');
-
   return {
     client,
     broker,
     mqttClient,
+    async ready() {
+      await once(broker, 'listening');
+      await once(mqttClient, 'connect');
+    },
     close() {
       mqttClient.end();
       broker.close();
       aedes.close();
     }
   };
+}
+
+export async function withFactory(fn: (f: ReturnType<typeof factory>) => Promise<void>) {
+  const f = factory();
+  await f.ready();
+  try {
+    await fn(f);
+  } finally {
+    f.close();
+  }
 }
