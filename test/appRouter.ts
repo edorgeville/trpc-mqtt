@@ -25,7 +25,7 @@ export const appRouter = router({
       state.count += input;
       return state.count;
     }),
-  takesASecondToResolve: publicProcedure.query(async () => {
+  slow: publicProcedure.query(async () => {
     await new Promise(resolve => setTimeout(resolve, 2000));
     return 'done';
   })

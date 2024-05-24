@@ -59,7 +59,7 @@ test('countUp mutation', async () => {
 
 test('abortSignal is handled', async () => {
   const controller = new AbortController();
-  const promise = client.takesASecondToResolve.query(undefined, {
+  const promise = client.slow.query(undefined, {
     signal: controller.signal
   });
 
