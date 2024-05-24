@@ -24,12 +24,13 @@ export type CreateMQTTHandlerOptions<TRouter extends AnyRouter> = {
   router: TRouter;
   onError?: OnErrorFunction<TRouter, ConsumeMessage>;
   verbose?: boolean;
+  createContext?: () => Promise<inferRouterContext<TRouter>>;
 };
 
 export const createMQTTHandler = <TRouter extends AnyRouter>(
   opts: CreateMQTTHandlerOptions<TRouter>
 ) => {
-  const { client, requestTopic: requestTopic, router, onError, verbose } = opts;
+  const { client, requestTopic: requestTopic, router, onError, verbose, createContext } = opts;
 
   const protocolVersion = client.options.protocolVersion ?? 4;
   client.subscribe(requestTopic);
@@ -43,7 +44,7 @@ export const createMQTTHandler = <TRouter extends AnyRouter>(
       const correlationId = packet.properties?.correlationData?.toString();
       const responseTopic = packet.properties?.responseTopic?.toString();
       if (!correlationId || !responseTopic) return;
-      const res = await handleMessage(router, msg, onError);
+      const res = await handleMessage(router, msg, onError, createContext);
       if (!res) return;
       client.publish(responseTopic, Buffer.from(JSON.stringify({ trpc: res })), {
         properties: {
@@ -62,7 +63,7 @@ export const createMQTTHandler = <TRouter extends AnyRouter>(
         return;
       }
       if (!correlationId || !responseTopic) return;
-      const res = await handleMessage(router, msg, onError);
+      const res = await handleMessage(router, msg, onError, createContext);
       if (!res) return;
       client.publish(responseTopic, Buffer.from(JSON.stringify({ trpc: res, correlationId })));
     }
@@ -72,7 +73,8 @@ export const createMQTTHandler = <TRouter extends AnyRouter>(
 async function handleMessage<TRouter extends AnyRouter>(
   router: TRouter,
   msg: ConsumeMessage,
-  onError?: OnErrorFunction<TRouter, ConsumeMessage>
+  onError?: OnErrorFunction<TRouter, ConsumeMessage>,
+  createContext?: () => Promise<inferRouterContext<TRouter>>
 ) {
   const { transformer } = router._def._config;
 
@@ -85,7 +87,7 @@ async function handleMessage<TRouter extends AnyRouter>(
 
     const { id, params } = trpc;
     const type = MQTT_METHOD_PROCEDURE_TYPE_MAP[trpc.method] ?? ('query' as const);
-    const ctx: inferRouterContext<TRouter> | undefined = undefined;
+    const ctx: inferRouterContext<TRouter> | undefined = await createContext?.();
 
     try {
       const path = params.path;

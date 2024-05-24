@@ -48,3 +48,12 @@ describe('procedures', () => {
     });
   });
 });
+
+describe('context', () => {
+  test('getContext query', async () => {
+    await withFactory(async ({ client }) => {
+      const ctx = await client.getContext.query();
+      expect(ctx).toEqual({ hello: 'world' });
+    });
+  });
+});

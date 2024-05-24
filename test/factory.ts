@@ -6,7 +6,7 @@ import { createServer } from 'net';
 
 import { createMQTTHandler } from '../src/adapter';
 import { mqttLink } from '../src/link';
-import { AppRouter, appRouter } from './appRouter';
+import { type AppRouter, appRouter, createContext } from './appRouter';
 
 export function factory() {
   const requestTopic = 'rpc/request';
@@ -20,7 +20,8 @@ export function factory() {
   createMQTTHandler({
     client: mqttClient,
     requestTopic,
-    router: appRouter
+    router: appRouter,
+    createContext
   });
 
   const client = createTRPCProxyClient<AppRouter>({
