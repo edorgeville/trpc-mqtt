@@ -68,4 +68,4 @@ Note: same as with the link, don't forget to clean up the MQTT client when you'r
 Distributed under the MIT License. See LICENSE for more information.
 
 ## Special thanks
-This project is a fork of [trpc-rabbitmq](https://github.com/imxeno/trpc-rabbitmq) by [Alex Brazier](https://github.com/imxeno)
+This project is a fork of [trpc-rabbitmq](https://github.com/imxeno/trpc-rabbitmq) by [Piotr Adamczyk](https://github.com/imxeno)
